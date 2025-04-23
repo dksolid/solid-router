@@ -7,6 +7,7 @@ export default {
   ],
   extensionsToTreatAsEsm: ['.ts', '.tsx'],
   transform: {
+    // '^.+\\.(t|j)sx?$': [
     // eslint-disable-next-line @typescript-eslint/naming-convention
     '^.+\\.(t|j)sx?$': [
       'babel-jest',
