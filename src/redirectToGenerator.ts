@@ -3,7 +3,6 @@
 // eslint-disable-next-line import/no-unresolved
 import queryString from 'query-string';
 import { batch } from 'solid-js';
-import { modifyMutable, reconcile } from 'solid-js/store';
 
 import { TypeRoute } from './types/TypeRoute.js';
 import { InterfaceRouterStore } from './types/InterfaceRouterStore.js';
@@ -14,6 +13,7 @@ import { getQueryValues } from './utils/getQueryValues.js';
 import { getDynamicValues } from './utils/getDynamicValues.js';
 import { replaceDynamicValues } from './utils/replaceDynamicValues.js';
 import { loadComponentToConfig } from './utils/loadComponentToConfig.js';
+import { replaceObject } from './utils/replaceObject.js';
 
 type TypeParamsGenerator<TRoutes extends Record<string, TypeRoute>> = {
   routes: TRoutes;
@@ -102,7 +102,7 @@ export function redirectToGenerator<TRoutes extends Record<string, TypeRoute>>({
     if (currentPathname === nextPathname) {
       if (currentSearch !== nextSearch) {
         batch(() => {
-          modifyMutable(routerStore.currentRoute.query, reconcile(nextQuery || {}));
+          replaceObject(routerStore.currentRoute.query, nextQuery || {});
           routerStore.routesHistory.push(nextUrl);
         });
 
@@ -199,33 +199,27 @@ export function redirectToGenerator<TRoutes extends Record<string, TypeRoute>>({
 
       await loadComponentToConfig({ route: routeError500 });
 
-      modifyMutable(
-        routerStore.currentRoute,
-        reconcile({
-          name: routeError500.name,
-          path: routeError500.path,
-          props: routes[routeError500.name].props,
-          query: {} as any,
-          params: {} as any,
-          pageName: routes[routeError500.name].pageName,
-        })
-      );
+      replaceObject(routerStore.currentRoute, {
+        name: routeError500.name,
+        path: routeError500.path,
+        props: routes[routeError500.name].props,
+        query: {} as any,
+        params: {} as any,
+        pageName: routes[routeError500.name].pageName,
+      });
 
       return Promise.resolve();
     }
 
     batch(() => {
-      modifyMutable(
-        routerStore.currentRoute,
-        reconcile({
-          name: nextRoute.name,
-          path: nextRoute.path,
-          props: routes[nextRoute.name].props,
-          query: getQueryValues({ route: nextRoute, pathname: nextUrl }),
-          params: getDynamicValues({ route: nextRoute, pathname: nextUrl }),
-          pageName: routes[nextRoute.name].pageName,
-        })
-      );
+      replaceObject(routerStore.currentRoute, {
+        name: nextRoute.name,
+        path: nextRoute.path,
+        props: routes[nextRoute.name].props,
+        query: getQueryValues({ route: nextRoute, pathname: nextUrl }),
+        params: getDynamicValues({ route: nextRoute, pathname: nextUrl }),
+        pageName: routes[nextRoute.name].pageName,
+      });
 
       const lastUrl = routerStore.routesHistory[routerStore.routesHistory.length - 1];
 
