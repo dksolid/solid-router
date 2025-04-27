@@ -179,6 +179,29 @@ describe('Router', () => {
       });
   }
 
+  function testProps(mode: 'separate' | 'store') {
+    const customRoutes = routes;
+
+    const { redirectTo, routerStore } = getData(mode, customRoutes);
+
+    const App = () => {
+      return <Router routerStore={routerStore} routes={customRoutes} redirectTo={redirectTo} />;
+    };
+
+    const { container } = render(() => <App />);
+
+    return Promise.resolve()
+      .then(() => redirectTo({ route: 'error404' }))
+      .then(() => {
+        expect(container.innerHTML).to.eq('Error 404');
+      })
+      .then(() => redirectTo({ route: 'error500' }))
+      .then(() => {
+        expect(container.innerHTML).to.eq('Error 500');
+      });
+  }
+
   // it('SSR', () => test1('separate').then(() => test1('store')));
   it('Client', () => test2('separate').then(() => test2('store')));
+  it('Props in component', () => testProps('separate').then(() => testProps('store')));
 });

@@ -1,6 +1,7 @@
 /* eslint-disable  @typescript-eslint/naming-convention */
 
-import { batch, createContext, createRenderEffect } from 'solid-js';
+import { batch, createContext, createRenderEffect, Show } from 'solid-js';
+import { Dynamic } from 'solid-js/web';
 import { createMutable } from 'solid-js/store';
 import { createUseStore, ViewModelConstructor } from '@dksolid/solid-vm';
 
@@ -9,6 +10,7 @@ import { TypeRoute } from './types/TypeRoute.js';
 import { getInitialRoute } from './utils/getInitialRoute.js';
 import { InterfaceRouterStore } from './types/InterfaceRouterStore.js';
 import { redirectToGenerator } from './redirectToGenerator.js';
+import { replaceObject } from './utils/replaceObject.js';
 
 type ViewModel = ViewModelConstructor<null>;
 
@@ -34,6 +36,7 @@ class VM<TRoutes extends Record<string, TypeRoute>> implements ViewModel {
   }
   loadedComponentName?: keyof TRoutes = undefined;
   loadedComponentPage?: string = undefined;
+  currentProps: Record<string, any> = {};
 
   beforeMount() {
     this.props.beforeMount?.();
@@ -77,6 +80,8 @@ class VM<TRoutes extends Record<string, TypeRoute>> implements ViewModel {
       preventRedirect = true;
     } else if (this.loadedComponentPage != null && currentRouteName != null) {
       if (this.loadedComponentPage === currentRoutePage) {
+        const componentConfig = this.props.routes[currentRouteName];
+        replaceObject(this.currentProps, 'props' in componentConfig ? componentConfig.props! : {});
         preventRedirect = true;
       }
     }
@@ -96,18 +101,27 @@ class VM<TRoutes extends Record<string, TypeRoute>> implements ViewModel {
 
   setComponent() {
     const currentRouteName = this.props.routerStore.currentRoute.name;
-
     const componentConfig = this.props.routes[currentRouteName];
 
     this.props.beforeSetPageComponent?.(componentConfig);
 
-    this.loadedComponentName = currentRouteName;
-    this.loadedComponentPage = componentConfig.pageName;
+    batch(() => {
+      replaceObject(this.currentProps, 'props' in componentConfig ? componentConfig.props! : {});
+      this.loadedComponentName = currentRouteName;
+      this.loadedComponentPage = componentConfig.pageName;
+    });
   }
 }
 
 export function Router<TRoutes extends Record<string, TypeRoute>>(props: TypeProps<TRoutes>) {
   const { vm } = useStore(VM<TRoutes>, props);
 
-  return <>{props.routes[vm.loadedComponentName!]?.component || null}</>;
+  return (
+    <Show when={vm.loadedComponentName}>
+      <Dynamic
+        component={(props.routes[vm.loadedComponentName!]?.component || undefined) as any}
+        {...vm.currentProps}
+      />
+    </Show>
+  );
 }
