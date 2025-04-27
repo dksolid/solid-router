@@ -2,7 +2,7 @@
   "name": "@dksolid/solid-router",
   "author": "dksolid",
   "license": "MIT",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Config-based routing for Solid.js",
   "type": "module",
   "repository": {
