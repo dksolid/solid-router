@@ -1,3 +1,5 @@
+# This library is outdated and will be removed soon. Migrate to [https://github.com/dkazakov8/reactive-route](https://github.com/dkazakov8/reactive-route)
+
 ## Config-based routing for Solid.js
 
 [![npm](https://img.shields.io/npm/v/@dksolid/solid-router)](https://www.npmjs.com/package/@dksolid/solid-router)
